@@ -1,0 +1,64 @@
+select xi.name,xi.description,xa.quantity, xw.warehouse_name 
+from xx_items xi,
+xx_availability xa,
+xx_warehouse xw
+where
+xa.item_id = xi.item_id and
+xw.warehouse_id = xa.warehouse_id
+order by xi.name;
+/* EX 1  */
+
+select xo.order_id
+from
+xx_order_lines xol,
+xx_orders xo
+where xol.order_id = xo.order_id
+and xol.unit_price = (select max(xxol.unit_price) from xx_order_lines xxol)
+and rownum = 1;
+/*EX 2*/
+
+select xw.warehouse_name,count(xo.order_id)
+from xx_warehouse xw,
+xx_orders xo
+where xw.warehouse_id = xo.warehouse_id
+group by xw.warehouse_name;
+/* EX 3*/
+
+select xa.item_id, xa.quantity, tq.totalq
+from xx_availability xa,
+xx_warehouse xw,
+    (select sum(xa.quantity) totalq, xa.item_id
+    from xx_availability xa,
+    xx_warehouse xw
+    where xw.warehouse_id (+) = xa.warehouse_id
+    group by xa.item_id) tq
+where xw.warehouse_name = 'Riga Warehouse' and
+xw.warehouse_id = xa.warehouse_id and
+tq.item_id =xa.item_id and 
+    xa.quantity / tq.totalq > 0.3
+order by xa.item_id;
+/* EX 4 */ 
+
+select xc.customer_name, xa.street_name ||','||  xa.building_nr ||','|| xa.office_nr ||','|| xa.postal_code address
+from 
+xx_address xa,
+xx_customers xc,
+(select count(xo.order_id) count_shipped , xo.customer_id
+from xx_orders xo
+where xo.status = 'SHIPPED'
+group by xo.customer_id) cs
+where
+xa.address_id = xc.address_id and
+xc.customer_id = cs.customer_id and 
+cs.count_shipped >=2;
+/* EX 5 */ 
+
+SELECT xc.customer_name,  xa.street_name ||','||  xa.building_nr ||','|| xa.office_nr ||','|| xa.postal_code address
+from xx_customers xc,
+xx_orders xo,
+xx_address xa
+where 
+xc.customer_id = xo.customer_id (+) and
+xa.address_id = xc.address_id and
+xo.order_number is null;
+/* EX 6 */ 
